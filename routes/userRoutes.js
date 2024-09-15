@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("./../models/user");
 
+const { jwtAuthMiddleware, generateToken } = require("./../jwt");
 router.post("/signup", async (req, res) => {
   try {
     const data = req.body;
@@ -14,7 +15,7 @@ router.post("/signup", async (req, res) => {
       id: response.id,
     };
     console.log(JSON.stringify(payload));
-    const token = generateToken(payloay);
+    const token = generateToken(payload);
     console.log("Token is", token);
     res.status(200).json({ response: response, token: token });
   } catch (err) {
@@ -43,7 +44,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/profile", async (req, res) => {
+router.get("/profile", jwtAuthMiddleware, async (req, res) => {
   try {
     const userData = req.user; //jwt se
     const userId = userData.id;
@@ -55,7 +56,7 @@ router.get("/profile", async (req, res) => {
   }
 });
 
-router.put("/profile/password", async (req, res) => {
+router.put("/profile/password", jwtAuthMiddleware, async (req, res) => {
   try {
     const userId = req.user.id; //jwt se
     const { currentPassword, newPassword } = req.body; //extract from request body
