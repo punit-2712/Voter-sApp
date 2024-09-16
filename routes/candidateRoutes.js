@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const Candidate = require("../models/candidate");
-const User=require("../models/user")
+const User = require("../models/user");
 const { jwtAuthMiddleware, generateToken } = require("./../jwt");
 const checkAdminRole = async (userId) => {
   try {
     const user = await User.findById(userId);
-    if (user.role =="admin") {
+    if (user.role == "admin") {
       return true;
     }
   } catch (err) {
@@ -16,7 +16,7 @@ const checkAdminRole = async (userId) => {
 
 router.post("/", jwtAuthMiddleware, async (req, res) => {
   try {
-    if (!await checkAdminRole(req.user.id)) {
+    if (!(await checkAdminRole(req.user.id))) {
       return res.status(403).json({ message: "User has not admin role" });
     }
     const data = req.body;
@@ -76,15 +76,12 @@ router.delete("/:candidateID", jwtAuthMiddleware, async (req, res) => {
   }
 });
 
+//voter abhi
 
-//voter abhi 
-
-router.post("/vote/:candidateID", jwtAuthMiddleware,async(req,res)=>{
-
-  const candidateId=req.params.candidateID;
-  const userId=req.user.id;
-  try{
-
+router.post("/vote/:candidateID", jwtAuthMiddleware, async (req, res) => {
+  const candidateId = req.params.candidateID;
+  const userId = req.user.id;
+  try {
     const candidate = await Candidate.findById(candidateId);
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });
@@ -100,21 +97,36 @@ router.post("/vote/:candidateID", jwtAuthMiddleware,async(req,res)=>{
       return res.status(403).json({ message: "Admin is not allowed" });
     }
 
-    //update the candidate document after voting 
+    //update the candidate document after voting
 
-    candidate.votes.push({user:userId});
+    candidate.votes.push({ user: userId });
     candidate.voteCount++;
     await candidate.save();
 
-    //update the user Document 
-    user.isVoted=true;
+    //update the user Document
+    user.isVoted = true;
     await user.save();
-
-  }catch(err){
-    
-
+    res.status(200).json({ message: "Vote recorded Successfully" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal serveer Error" });
   }
+});
 
+router.get("/vote/count", async (req, res) => {
+  try {
+    const candidate = await Candidate.find().sort({ voteCount: "desc" });
 
+    const voteRecord = candidate.map((data) => {
+      return {
+        party: data.party,
+        count: data.votecount,
+      };
+    });
+    res.status(200).json(voteRecord);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal serveer Error" });
+  }
 });
 module.exports = router;
