@@ -6,13 +6,13 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 const PORT = process.env.PORT || 3000;
 
-const { jwtAuthMiddleware } = require("./jwt");
+
 
 const userRoutes = require("./routes/userRoutes");
 const candidateRoute = require("./routes/candidateRoutes");
 //use the routers
 app.use("/user", userRoutes);
-app.use("/candidate", jwtAuthMiddleware, candidateRoute);
+app.use("/candidate", candidateRoute);
 
 app.listen(PORT, () => {
   console.log("Listening to port 3000");
